@@ -10,12 +10,12 @@ add_custom_command(
 )
 include_directories(${CMAKE_BINARY_DIR}/src)
 
-set(COMPILER_SRC
-    compiler/Builder.cpp
-    compiler/Compiler.cpp
-    compiler/Flow.cpp
-    compiler/Function.cpp
-    compiler/Variable.cpp
+set(LLVM_COMPILER_SRC
+    compiler/llvm/Builder.cpp
+    compiler/llvm/Compiler.cpp
+    compiler/llvm/Flow.cpp
+    compiler/llvm/Function.cpp
+    compiler/llvm/Variable.cpp
 )
 
 set(SRC
@@ -39,7 +39,7 @@ set(SRC
     preproc/Preproc.cpp
     
     # Compile sources
-    ${COMPILER_SRC}
+    ${LLVM_COMPILER_SRC}
 )
 
 add_executable(blc ${SRC} main.cpp)
