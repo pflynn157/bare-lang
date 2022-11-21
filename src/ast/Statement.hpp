@@ -95,6 +95,29 @@ private:
     AstDataType *dataType;
 };
 
+// Represents an array declaration
+class AstArrayDec : public AstStatement {
+public:
+    explicit AstArrayDec(std::string name, AstDataType *dataType) : AstStatement(V_AstType::ArrayDec) {
+        this->name = name;
+        this->dataType = dataType;
+    }
+    
+    void setDataType(AstDataType *dataType) { this->dataType = dataType; }
+    void setPtrSize(AstExpression *size) { this->size = size; }
+    
+    std::string getName() { return name; }
+    AstDataType *getDataType() { return dataType; }
+    AstExpression *getPtrSize() { return size; }
+    
+    void print();
+    std::string dot(std::string parent) override;
+private:
+    std::string name = "";
+    AstExpression *size = nullptr;
+    AstDataType *dataType;
+};
+
 // Represents a structure declaration
 class AstStructDec : public AstStatement {
 public:

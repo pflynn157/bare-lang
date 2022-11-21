@@ -142,6 +142,17 @@ void AstVarDec::print() {
     std::cout << std::endl;
 }
 
+void AstArrayDec::print() {
+    std::cout << "ARRAY_DEC " << name << " : ";
+    dataType->print();
+    if (dataType->getType() == V_AstType::Ptr) {
+        std::cout << "[";
+        size->print();
+        std::cout << "]";
+    }
+    std::cout << std::endl;
+}
+
 void AstStructDec::print() {
     std::cout << "STRUCT " << varName << " : " << structName;
     if (noInit) std::cout << " NOINIT";

@@ -15,8 +15,7 @@
 // A variable declaration is composed of an Alloca and optionally, an assignment
 bool Parser::buildVariableDec(AstBlock *block) {
     Token token = scanner->getNext();
-    std::vector<std::string> toDeclare;
-    toDeclare.push_back(token.id_val);
+    std::string name = token.id_val;
     
     if (token.type != Id) {
         syntax->addError(scanner->getLine(), "Expected variable name.");
@@ -24,108 +23,114 @@ bool Parser::buildVariableDec(AstBlock *block) {
     }
     
     token = scanner->getNext();
-    
-    while (token.type != Colon) {
-        if (token.type == Comma) {
-            token = scanner->getNext();
-            
-            if (token.type != Id) {
-                syntax->addError(scanner->getLine(), "Expected variable name.");
-                return false;
-            }
-            
-            toDeclare.push_back(token.id_val);
-        } else if (token.type != Colon) {
-            syntax->addError(scanner->getLine(), "Invalid token in variable declaration.");
-            return false;
-        }
-        
-        token = scanner->getNext();
+    if (token.type != Colon) {
+        syntax->addError(scanner->getLine(), "Invalid token in variable declaration.");
+        return false;
     }
     
     AstDataType *dataType = buildDataType(false);
     token = scanner->getNext();
     
     // We have an array
-    if (token.type == LBracket) {
-        dataType = AstBuilder::buildPointerType(dataType);
-        AstVarDec *empty = new AstVarDec("", dataType);
-        AstExpression *arg = buildExpression(AstBuilder::buildInt32Type(), RBracket);
-        if (!arg) return false;
-        empty->setExpression(arg); 
-        
-        token = scanner->getNext();
-        if (token.type != SemiColon) {
-            syntax->addError(scanner->getLine(), "Error: Expected \';\'.");
-            return false;
-        }
-        
-        for (std::string name : toDeclare) {
-            vars.push_back(name);
-            AstVarDec *vd = new AstVarDec(name, dataType);
-            block->addStatement(vd);
-            vd->setExpression(empty->getExpression());
-            
-            // Create an assignment to a malloc call
-            AstExprStatement *va = new AstExprStatement;
-            va->setDataType(dataType);
-            block->addStatement(va);
-            
-            AstID *id = new AstID(name);
-            AstFuncCallExpr *callMalloc = new AstFuncCallExpr("malloc");
-            AstAssignOp *assign = new AstAssignOp(id, callMalloc);
-            
-            va->setExpression(assign);
-            
-            // In order to get a proper malloc, we need to multiply the argument by
-            // the size of the type. Get the arguments, and do that
-            AstExprList *list = new AstExprList;
-            callMalloc->setArgExpression(list);
-            
-            AstI32 *size;
-            AstDataType *baseType = static_cast<AstPointerType *>(dataType)->getBaseType();
-            if (baseType->getType() == V_AstType::Int32) size = new AstI32(4);
-            else if (baseType->getType() == V_AstType::Int64) size = new AstI32(8);
-            else if (baseType->getType() == V_AstType::String) size = new AstI32(8);
-            else size = new AstI32(1);
-            
-            AstMulOp *op = new AstMulOp;
-            op->setLVal(size);
-            op->setRVal(vd->getExpression());
-            list->addExpression(op);
-            
-            // Finally, set the size of the declaration
-            vd->setPtrSize(vd->getExpression());
-            
-            typeMap[name] = dataType;
-        }
-    
-    // We're at the end of the declaration
-    } else if (token.type == SemiColon) {
+    if (token.type == SemiColon) {
         syntax->addError(scanner->getLine(), "Expected init expression.");
         return false;
-        
-    // Otherwise, we have a regular variable
-    } else {
-        AstExpression *arg = buildExpression(dataType);
-        if (!arg) return false;
-    
-        for (std::string name : toDeclare) {
-            vars.push_back(name);
-            AstVarDec *vd = new AstVarDec(name, dataType);
-            block->addStatement(vd);
-            
-            typeMap[name] = dataType;
-            
-            AstID *id = new AstID(name);
-            AstAssignOp *assign = new AstAssignOp(id, arg);
-            
-            AstExprStatement *va = new AstExprStatement;
-            va->setDataType(dataType);
-            va->setExpression(assign);
-            block->addStatement(va);
-        }
     }
+    
+    AstExpression *arg = buildExpression(dataType);
+    if (!arg) return false;
+    
+    AstVarDec *vd = new AstVarDec(name, dataType);
+    block->addStatement(vd);
+    
+    typeMap[name] = dataType;
+    
+    AstID *id = new AstID(name);
+    AstAssignOp *assign = new AstAssignOp(id, arg);
+    
+    AstExprStatement *va = new AstExprStatement;
+    va->setDataType(dataType);
+    va->setExpression(assign);
+    block->addStatement(va);
+    
+    return true;
+}
+
+//
+// Builds an array declaration
+//
+bool Parser::buildArrayDec(AstBlock *block) {
+    Token token = scanner->getNext();
+    std::string name = token.id_val;
+    
+    if (token.type != Id) {
+        syntax->addError(scanner->getLine(), "Expected array name.");
+        return false;
+    }
+    
+    token = scanner->getNext();
+    if (token.type != Colon) {
+        syntax->addError(scanner->getLine(), "Invalid token in variable declaration.");
+        return false;
+    }
+    
+    AstDataType *dataType = buildDataType(false);
+    token = scanner->getNext();
+    
+    // We have an array
+    if (token.type != LBracket) {
+        syntax->addError(scanner->getLine(), "Expected \'[\' for array declaration.");
+        return false;
+    }
+    
+    dataType = AstBuilder::buildPointerType(dataType);
+    AstArrayDec *empty = new AstArrayDec("", dataType);
+    AstExpression *arg = buildExpression(AstBuilder::buildInt32Type(), RBracket);
+    if (!arg) return false;
+    empty->setExpression(arg); 
+    
+    token = scanner->getNext();
+    if (token.type != SemiColon) {
+        syntax->addError(scanner->getLine(), "Error: Expected \';\'.");
+        return false;
+    }
+        
+    vars.push_back(name);
+    AstArrayDec *vd = new AstArrayDec(name, dataType);
+    block->addStatement(vd);
+    vd->setExpression(empty->getExpression());
+    
+    // Create an assignment to a malloc call
+    AstExprStatement *va = new AstExprStatement;
+    va->setDataType(dataType);
+    block->addStatement(va);
+    
+    AstID *id = new AstID(name);
+    AstFuncCallExpr *callMalloc = new AstFuncCallExpr("malloc");
+    AstAssignOp *assign = new AstAssignOp(id, callMalloc);
+    
+    va->setExpression(assign);
+    
+    // In order to get a proper malloc, we need to multiply the argument by
+    // the size of the type. Get the arguments, and do that
+    AstExprList *list = new AstExprList;
+    callMalloc->setArgExpression(list);
+    
+    AstI32 *size;
+    AstDataType *baseType = static_cast<AstPointerType *>(dataType)->getBaseType();
+    if (baseType->getType() == V_AstType::Int32) size = new AstI32(4);
+    else if (baseType->getType() == V_AstType::Int64) size = new AstI32(8);
+    else if (baseType->getType() == V_AstType::String) size = new AstI32(8);
+    else size = new AstI32(1);
+    
+    AstMulOp *op = new AstMulOp;
+    op->setLVal(size);
+    op->setRVal(vd->getExpression());
+    list->addExpression(op);
+    
+    // Finally, set the size of the declaration
+    vd->setPtrSize(vd->getExpression());
+    typeMap[name] = dataType;
     
     return true;
 }

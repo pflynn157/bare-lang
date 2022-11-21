@@ -7,7 +7,7 @@
 # Define the keywords
 keywords = [
     ("extern", "Extern"), ("func", "Func"), ("struct", "Struct"), ("end", "End"), ("return", "Return"),
-    ("var", "VarD"), ("const", "Const"),
+    ("var", "VarD"), ("array", "Array"), ("const", "Const"),
     ("bool", "Bool"), ("char", "Char"), ("string", "Str"),
     ("i8", "I8"), ("u8", "U8"), ("i16", "I16"), ("u16", "U16"), 
     ("i32", "I32"), ("u32", "U32"), ("i64", "I64"), ("u64", "U64"),

@@ -134,6 +134,16 @@ std::string AstVarDec::dot(std::string parent) {
     return output;
 }
 
+std::string AstArrayDec::dot(std::string parent) {
+    std::string name = "array" + std::to_string(idx);
+    ++idx;
+    
+    std::string output = name + "[label=\"array " + this->name + "\"];\n";
+    output += parent + " -> " + name + ";\n";
+    
+    return output;
+}
+
 std::string AstStructDec::dot(std::string parent) {
     std::string name = "struct" + std::to_string(idx);
     ++idx;

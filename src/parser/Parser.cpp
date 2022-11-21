@@ -68,6 +68,7 @@ bool Parser::buildBlock(AstBlock *block, AstNode *parent) {
         
         switch (token.type) {
             case VarD: code = buildVariableDec(block); break;
+            case Array: code = buildArrayDec(block); break;
             case Struct: code = buildStructDec(block); break;
             case Const: code = buildConst(false); break;
             

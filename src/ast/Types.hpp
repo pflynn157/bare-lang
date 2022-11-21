@@ -28,6 +28,7 @@ enum class V_AstType {
     FuncCallExpr,
     
     VarDec,
+    ArrayDec,
     StructDec,
     
     If,

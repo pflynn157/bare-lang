@@ -35,6 +35,7 @@ protected:
     
     // Variable.cpp
     bool buildVariableDec(AstBlock *block);
+    bool buildArrayDec(AstBlock *block);
     bool buildVariableAssign(AstBlock *block, Token idToken);
     bool buildConst(bool isGlobal);
     
